@@ -1,13 +1,13 @@
-use std::error::Error;
+use crate::service_info::{MethodInfo, ServiceInfo};
 use prost::Message;
+use std::error::Error;
 use tokio_stream::StreamExt;
-use tonic::{Request, transport::Endpoint};
 use tonic::transport::Channel;
+use tonic::{transport::Endpoint, Request};
 use tonic_reflection::pb::server_reflection_client::ServerReflectionClient;
-use tonic_reflection::pb::{ServerReflectionRequest};
 use tonic_reflection::pb::server_reflection_request::MessageRequest;
 use tonic_reflection::pb::server_reflection_response::MessageResponse;
-use crate::service_info::{ServiceInfo, MethodInfo};
+use tonic_reflection::pb::ServerReflectionRequest;
 
 pub struct ReflectionClient {
     client: ServerReflectionClient<tonic::transport::Channel>,
@@ -28,9 +28,16 @@ impl ReflectionClient {
         })
     }
 
-    async fn make_request(&mut self, request: ServerReflectionRequest) -> Result<MessageResponse, Box<dyn Error>> {
+    async fn make_request(
+        &mut self,
+        request: ServerReflectionRequest,
+    ) -> Result<MessageResponse, Box<dyn Error>> {
         let request = Request::new(tokio_stream::once(request));
-        let mut inbound = self.client.server_reflection_info(request).await?.into_inner();
+        let mut inbound = self
+            .client
+            .server_reflection_info(request)
+            .await?
+            .into_inner();
 
         if let Some(response) = inbound.next().await {
             return Ok(response?.message_response.expect("some MessageResponse"));
@@ -40,10 +47,12 @@ impl ReflectionClient {
     }
 
     pub async fn list_services(&mut self) -> Result<Vec<ServiceInfo>, Box<dyn Error>> {
-        let response = self.make_request(ServerReflectionRequest {
-            host: "".to_string(),
-            message_request: Some(MessageRequest::ListServices(String::new())),
-        }).await?;
+        let response = self
+            .make_request(ServerReflectionRequest {
+                host: "".to_string(),
+                message_request: Some(MessageRequest::ListServices(String::new())),
+            })
+            .await?;
 
         if let MessageResponse::ListServicesResponse(services_response) = response {
             let mut services_info = Vec::new();
@@ -53,11 +62,19 @@ impl ReflectionClient {
 
                 for file_descriptor in descriptors {
                     for service in file_descriptor.service {
-                        let methods: Vec<MethodInfo> = service.method.into_iter()
+                        let methods: Vec<MethodInfo> = service
+                            .method
+                            .into_iter()
                             .map(|method| {
-                                method.name.ok_or_else(|| {
-                                    format!("Method name is missing for service {:?}", service.name)
-                                }).map(|name| MethodInfo { name })
+                                method
+                                    .name
+                                    .ok_or_else(|| {
+                                        format!(
+                                            "Method name is missing for service {:?}",
+                                            service.name
+                                        )
+                                    })
+                                    .map(|name| MethodInfo { name })
                             })
                             .collect::<Result<Vec<MethodInfo>, _>>()?;
 
@@ -84,17 +101,22 @@ impl ReflectionClient {
         }
     }
 
-
-    async fn get_file_descriptor(&mut self, symbol: String) -> Result<Vec<prost_types::FileDescriptorProto>, Box<dyn Error>> {
-        let response = self.make_request(ServerReflectionRequest {
-            host: "".to_string(),
-            message_request: Some(MessageRequest::FileContainingSymbol(symbol)),
-        }).await?;
+    async fn get_file_descriptor(
+        &mut self,
+        symbol: String,
+    ) -> Result<Vec<prost_types::FileDescriptorProto>, Box<dyn Error>> {
+        let response = self
+            .make_request(ServerReflectionRequest {
+                host: "".to_string(),
+                message_request: Some(MessageRequest::FileContainingSymbol(symbol)),
+            })
+            .await?;
 
         if let MessageResponse::FileDescriptorResponse(descriptor_response) = response {
             let mut descriptors = Vec::new();
             for file_descriptor_proto in descriptor_response.file_descriptor_proto {
-                let file_descriptor = prost_types::FileDescriptorProto::decode(&file_descriptor_proto[..])?;
+                let file_descriptor =
+                    prost_types::FileDescriptorProto::decode(&file_descriptor_proto[..])?;
                 descriptors.push(file_descriptor);
             }
             Ok(descriptors)
