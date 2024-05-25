@@ -1,0 +1,27 @@
+[package]
+name = "grpc-ease"
+version = "0.1.0"
+edition = "2021"
+
+license = "Apache-2.0"
+authors = ["Arteii <ben.arteii@proton.me>"]
+readme = "README.md"
+categories = ["network-programming"]
+description = "wrappers and helper structures for working with gRPC in Rust using the Tonic library"
+repository = "https://github.com/Arteiii/grpc-ease"
+keywords = ["protobuf", "grpc", "rpc"]
+homepage = "https://arteiii.github.io"
+
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+]
+
+[dependencies]
+prost = "0.12.6"
+tokio-stream = "0.1.15"
+tonic = "0.11.0"
+tonic-reflection = "0.11.0"
+prost-types = "0.12.6"
+tracing = "0.1"
+tokio = { version = "1.37.0", features = ["rt", "rt-multi-thread", "macros"] }
