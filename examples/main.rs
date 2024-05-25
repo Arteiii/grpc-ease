@@ -1,5 +1,4 @@
 use grpc_ease::reflection::ReflectionClient;
-use tonic::transport::Channel;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

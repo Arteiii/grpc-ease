@@ -2,15 +2,17 @@ use crate::service_info::{MethodInfo, ServiceInfo};
 use prost::Message;
 use std::error::Error;
 use tokio_stream::StreamExt;
-use tonic::transport::Channel;
-use tonic::{transport::Endpoint, Request};
-use tonic_reflection::pb::server_reflection_client::ServerReflectionClient;
-use tonic_reflection::pb::server_reflection_request::MessageRequest;
-use tonic_reflection::pb::server_reflection_response::MessageResponse;
-use tonic_reflection::pb::ServerReflectionRequest;
+use tonic::{
+    transport::{Channel, Endpoint},
+    Request,
+};
+use tonic_reflection::pb::{
+    server_reflection_client::ServerReflectionClient, server_reflection_request::MessageRequest,
+    server_reflection_response::MessageResponse, ServerReflectionRequest,
+};
 
 pub struct ReflectionClient {
-    client: ServerReflectionClient<tonic::transport::Channel>,
+    client: ServerReflectionClient<Channel>,
 }
 
 impl ReflectionClient {
