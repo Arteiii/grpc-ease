@@ -3,6 +3,10 @@
 pub struct MethodInfo {
     /// The name of the RPC method
     pub name: String,
+    /// The name of the request message
+    pub request: String,
+    /// The name of the response message
+    pub response: String,
 }
 
 /// Represents information about a gRPC service, including its package name,
